@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blockfilter.h>
+#include <crypto/siphash.h>
 #include <hash.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -208,7 +209,7 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
     for (const CTransactionRef& tx : block.vtx) {
         for (const CTxOut& txout : tx->vout) {
             const CScript& script = txout.scriptPubKey;
-            if (script[0] == OP_RETURN) continue;
+            if (script.empty() || script[0] == OP_RETURN) continue;
             elements.emplace(script.begin(), script.end());
         }
     }
@@ -216,6 +217,7 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
     for (const CTxUndo& tx_undo : block_undo.vtxundo) {
         for (const Coin& prevout : tx_undo.vprevout) {
             const CScript& script = prevout.out.scriptPubKey;
+            if (script.empty()) continue;
             elements.emplace(script.begin(), script.end());
         }
     }
